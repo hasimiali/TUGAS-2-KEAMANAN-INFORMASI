@@ -1,5 +1,5 @@
 import socket
-from des import des_encrypt  # Pastikan fungsi enkripsi DES ada di des.py
+from des import des_encrypt  
 
 def main():
     # Server information

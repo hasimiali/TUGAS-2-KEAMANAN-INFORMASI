@@ -1,4 +1,4 @@
-from des_constants import IP, FP, PC1, PC2, SHIFTS  # Konstanta diambil dari kode sebelumnya
+from des_constants import IP, FP, PC1, PC2, SHIFTS 
 
 def permute(data, perm):
     result = 0
@@ -26,7 +26,6 @@ def des_encrypt_block(data, key):
     left, right = data >> 32, data & 0xFFFFFFFF
 
     for i in range(16):
-        # Implementasikan logika round function di sini
         left, right = right, left  # Placeholder
 
     combined = (right << 32) | left
@@ -38,7 +37,6 @@ def des_decrypt_block(data, key):
     left, right = data >> 32, data & 0xFFFFFFFF
 
     for i in range(16):
-        # Implementasikan logika round function di sini
         left, right = right, left  # Placeholder
 
     combined = (right << 32) | left
