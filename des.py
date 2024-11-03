@@ -1,88 +1,172 @@
-from des_constants import IP, FP, PC1, PC2, SHIFTS 
+# DES predefined tables
+IP = [58, 50, 42, 34, 26, 18, 10, 2,
+      60, 52, 44, 36, 28, 20, 12, 4,
+      62, 54, 46, 38, 30, 22, 14, 6,
+      64, 56, 48, 40, 32, 24, 16, 8,
+      57, 49, 41, 33, 25, 17, 9, 1,
+      59, 51, 43, 35, 27, 19, 11, 3,
+      61, 53, 45, 37, 29, 21, 13, 5,
+      63, 55, 47, 39, 31, 23, 15, 7]
 
-def permute(data, perm):
-    result = 0
-    for i in range(len(perm)):
-        result <<= 1
-        result |= (data >> (64 - perm[i])) & 1
-    return result
+IP_INV = [40, 8, 48, 16, 56, 24, 64, 32,
+          39, 7, 47, 15, 55, 23, 63, 31,
+          38, 6, 46, 14, 54, 22, 62, 30,
+          37, 5, 45, 13, 53, 21, 61, 29,
+          36, 4, 44, 12, 52, 20, 60, 28,
+          35, 3, 43, 11, 51, 19, 59, 27,
+          34, 2, 42, 10, 50, 18, 58, 26,
+          33, 1, 41, 9, 49, 17, 57, 25]
 
-def key_schedule(key):
-    key = permute(key, PC1)
-    left, right = key >> 28, key & 0x0FFFFFFF
-    subkeys = []
+E = [32, 1, 2, 3, 4, 5,
+     4, 5, 6, 7, 8, 9,
+     8, 9, 10, 11, 12, 13,
+     12, 13, 14, 15, 16, 17,
+     16, 17, 18, 19, 20, 21,
+     20, 21, 22, 23, 24, 25,
+     24, 25, 26, 27, 28, 29,
+     28, 29, 30, 31, 32, 1]
 
-    for shift in SHIFTS:
-        left = ((left << shift) | (left >> (28 - shift))) & 0x0FFFFFFF
-        right = ((right << shift) | (right >> (28 - shift))) & 0x0FFFFFFF
-        combined = (left << 28) | right
-        subkeys.append(permute(combined, PC2))
+P = [16, 7, 20, 21,
+     29, 12, 28, 17,
+     1, 15, 23, 26,
+     5, 18, 31, 10,
+     2, 8, 24, 14,
+     32, 27, 3, 9,
+     19, 13, 30, 6,
+     22, 11, 4, 25]
 
-    return subkeys
+PC1 = [57, 49, 41, 33, 25, 17, 9,
+       1, 58, 50, 42, 34, 26, 18,
+       10, 2, 59, 51, 43, 35, 27,
+       19, 11, 3, 60, 52, 44, 36,
+       63, 55, 47, 39, 31, 23, 15,
+       7, 62, 54, 46, 38, 30, 22,
+       14, 6, 61, 53, 45, 37, 29,
+       21, 13, 5, 28, 20, 12, 4]
 
-def des_encrypt_block(data, key):
-    subkeys = key_schedule(key)
-    data = permute(data, IP)
-    left, right = data >> 32, data & 0xFFFFFFFF
+PC2 = [14, 17, 11, 24, 1, 5,
+       3, 28, 15, 6, 21, 10,
+       23, 19, 12, 4, 26, 8,
+       16, 7, 27, 20, 13, 2,
+       41, 52, 31, 37, 47, 55,
+       30, 40, 51, 45, 33, 48,
+       44, 49, 39, 56, 34, 53,
+       46, 42, 50, 36, 29, 32]
 
-    for i in range(16):
-        left, right = right, left  # Placeholder
+# Complete S-boxes for DES
+S_BOXES = [
+    [[14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
+     [0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8],
+     [4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0],
+     [15, 12, 8, 2, 4, 9, 1, 7, 5, 11, 3, 14, 10, 0, 6, 13]],
+    [[15, 1, 8, 14, 6, 11, 3, 4, 9, 7, 2, 13, 12, 0, 5, 10],
+     [3, 13, 4, 7, 15, 2, 8, 14, 12, 0, 1, 10, 6, 9, 11, 5],
+     [0, 14, 7, 11, 10, 4, 13, 1, 5, 8, 12, 6, 9, 3, 2, 15],
+     [13, 8, 10, 1, 3, 15, 4, 2, 11, 6, 7, 12, 0, 5, 14, 9]],
+    [[10, 0, 9, 14, 6, 3, 15, 5, 1, 13, 12, 7, 11, 4, 2, 8],
+     [13, 7, 0, 9, 3, 4, 6, 10, 2, 8, 5, 14, 12, 11, 15, 1],
+     [13, 6, 4, 9, 8, 15, 3, 0, 11, 1, 2, 12, 5, 10, 14, 7],
+     [1, 10, 13, 0, 6, 9, 8, 7, 4, 15, 14, 3, 11, 5, 2, 12]],
+    [[7, 13, 14, 3, 0, 6, 9, 10, 1, 2, 8, 5, 11, 12, 4, 15],
+     [13, 8, 11, 5, 6, 15, 0, 3, 4, 7, 2, 12, 1, 10, 14, 9],
+     [10, 6, 9, 0, 12, 11, 7, 13, 15, 1, 3, 14, 5, 2, 8, 4],
+     [3, 15, 0, 6, 10, 1, 13, 8, 9, 4, 5, 11, 12, 7, 2, 14]],
+    [[2, 12, 4, 1, 7, 10, 11, 6, 8, 5, 3, 15, 13, 0, 14, 9],
+     [14, 11, 2, 12, 4, 7, 13, 1, 5, 0, 15, 10, 3, 9, 8, 6],
+     [4, 2, 1, 11, 10, 13, 7, 8, 15, 9, 12, 5, 6, 3, 0, 14],
+     [11, 8, 12, 7, 1, 14, 2, 13, 6, 15, 0, 9, 10, 4, 5, 3]],
+    [[12, 1, 10, 15, 9, 2, 6, 8, 0, 13, 3, 4, 14, 7, 5, 11],
+     [10, 15, 4, 2, 7, 12, 9, 5, 6, 1, 13, 14, 0, 11, 3, 8],
+     [9, 14, 15, 5, 2, 8, 12, 3, 7, 0, 4, 10, 1, 13, 11, 6],
+     [4, 3, 2, 12, 9, 5, 15, 10, 11, 14, 1, 7, 6, 0, 8, 13]],
+    [[4, 11, 2, 14, 15, 0, 8, 13, 3, 12, 9, 7, 5, 10, 6, 1],
+     [13, 0, 11, 7, 4, 9, 1, 10, 14, 3, 5, 12, 2, 15, 8, 6],
+     [1, 4, 11, 13, 12, 3, 7, 14, 10, 15, 6, 8, 0, 5, 9, 2],
+     [6, 11, 13, 8, 1, 4, 10, 7, 9, 5, 0, 15, 14, 2, 3, 12]],
+    [[13, 2, 8, 4, 6, 15, 11, 1, 10, 9, 3, 14, 5, 0, 12, 7],
+     [1, 15, 13, 8, 10, 3, 7, 4, 12, 5, 6, 11, 0, 14, 9, 2],
+     [7, 11, 4, 1, 9, 12, 14, 2, 0, 6, 10, 13, 15, 3, 5, 8],
+     [2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11]]
+]
 
-    combined = (right << 32) | left
-    return permute(combined, FP)
+LEFT_SHIFTS = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
 
-def des_decrypt_block(data, key):
-    subkeys = key_schedule(key)[::-1]
-    data = permute(data, IP)
-    left, right = data >> 32, data & 0xFFFFFFFF
+def permute(block, table):
+    return [block[x - 1] for x in table]
 
-    for i in range(16):
-        left, right = right, left  # Placeholder
+def xor(bits1, bits2):
+    return [b1 ^ b2 for b1, b2 in zip(bits1, bits2)]
 
-    combined = (right << 32) | left
-    return permute(combined, FP)
+def left_rotate(bits, n):
+    return bits[n:] + bits[:n]
 
-def pad(data):
-    # PKCS#7 padding untuk memastikan panjang data kelipatan 8 byte
-    padding_len = 8 - (len(data) % 8)
-    padding = bytes([padding_len] * padding_len)  # Padding sebagai byte array
-    return data.encode() + padding
-
-def unpad(data):
-    # Menghapus padding setelah dekripsi
-    padding_len = data[-1]  # Ambil panjang padding dari byte terakhir
-    if padding_len < 1 or padding_len > 8:
-        raise ValueError("Invalid padding length")
-    return data[:-padding_len].decode('utf-8', errors='ignore')
-
-
-
-
-def des_encrypt(message, key):
-    # Tambahkan padding sebelum enkripsi
-    padded_message = pad(message)
+def generate_keys(key):
+    key = permute(key, PC1)  # 64-bit to 56-bit key
+    left, right = key[:28], key[28:]
+    round_keys = []
     
-    encrypted_message = ""
-    for i in range(0, len(padded_message), 8):
-        block_data = int.from_bytes(padded_message[i:i + 8].encode(), 'big')
-        encrypted_message += f"{des_encrypt_block(block_data, key):016X}"
-
-    return encrypted_message
-
-def des_decrypt(encrypted_message, key):
-    # Memecah pesan terenkripsi menjadi blok 16 karakter
-    blocks = [encrypted_message[i:i + 16] for i in range(0, len(encrypted_message), 16)]
+    for shift in LEFT_SHIFTS:
+        left = left_rotate(left, shift)
+        right = left_rotate(right, shift)
+        round_key = permute(left + right, PC2)
+        round_keys.append(round_key)
     
-    decrypted_data = b""
-    for block in blocks:
-        block_data = int(block, 16)
-        decrypted_data += block_data.to_bytes(8, 'big')
+    return round_keys
 
-    try:
-        # Hapus padding setelah dekripsi
-        return unpad(decrypted_data.decode())
-    except ValueError as e:
-        print(f"Error saat unpadding: {e}")
-        return ""
+def feistel(right, subkey):
+    expanded = permute(right, E)
+    xored = xor(expanded, subkey)
+    substituted = []
+    for i in range(8):
+        row = (xored[i*6] << 1) | xored[i*6 + 5]
+        col = (xored[i*6 + 1] << 3) | (xored[i*6 + 2] << 2) | (xored[i*6 + 3] << 1) | xored[i*6 + 4]
+        substituted.extend(bin(S_BOXES[i][row][col])[2:].zfill(4))
+    return permute([int(bit) for bit in substituted], P)
 
+def des_encrypt_decrypt(block, keys, decrypt=False):
+    block = permute(block, IP)
+    left, right = block[:32], block[32:]
+    for round_key in (reversed(keys) if decrypt else keys):
+        temp_right = xor(left, feistel(right, round_key))
+        left, right = right, temp_right
+    return permute(right + left, IP_INV)
 
+# Import any needed modules
+from typing import List
+
+# Function to convert string to a 64-bit binary list
+def str_to_bin64(text: str) -> List[int]:
+    bin_text = ''.join(f'{ord(char):08b}' for char in text)
+    return [int(bit) for bit in bin_text.ljust(64, '0')[:64]]  # Pad or trim to 64 bits
+
+# Function to convert binary list to string (after decryption)
+def bin64_to_str(bin_data: List[int]) -> str:
+    chars = [chr(int(''.join(map(str, bin_data[i:i+8])), 2)) for i in range(0, len(bin_data), 8)]
+    return ''.join(chars).rstrip('\x00')  # Remove padding nulls if any
+
+# Function to convert hexadecimal key to binary list (64-bit)
+def hex_key_to_bin64(hex_key: str) -> List[int]:
+    bin_key = bin(int(hex_key, 16))[2:].zfill(64)
+    return [int(bit) for bit in bin_key[:64]]  # Ensure 64-bit length
+
+# Example usage of the DES encryption and decryption
+if __name__ == "__main__":
+    # Define plaintext and key
+    plaintext = "HelloDES"  # 8 characters (64 bits when padded)
+    hex_key = "133457799BBCDFF1"  # 64-bit key in hex format
+
+    # Convert plaintext and key to binary
+    binary_plaintext = str_to_bin64(plaintext)
+    binary_key = hex_key_to_bin64(hex_key)
+
+    # Generate round keys
+    round_keys = generate_keys(binary_key)
+
+    # Encrypt the plaintext
+    encrypted_bin = des_encrypt_decrypt(binary_plaintext, round_keys, decrypt=False)
+    print("Encrypted binary:", ''.join(map(str, encrypted_bin)))
+
+    # Decrypt the ciphertext
+    decrypted_bin = des_encrypt_decrypt(encrypted_bin, round_keys, decrypt=True)
+    decrypted_text = bin64_to_str(decrypted_bin)
+    print("Decrypted text:", decrypted_text)
