@@ -18,6 +18,7 @@ Proyek ini mengimplementasikan aplikasi klien-server sederhana yang menggunakan 
 
 - `server.py` - Kode server yang mendengarkan koneksi dari klien, mengenkripsi teks yang diterima, dan mengirim kembali data yang sudah dienkripsi.
 - `client.py` - Kode klien yang menghubungkan ke server, mengirim teks, menerima data yang sudah dienkripsi, lalu mendekripsinya secara lokal.
+- `des_constants.py` - Berisi array yang digunakan dalam program server dan client
 - `README.md` - Dokumentasi untuk aplikasi ini.
 
 ## Persiapan

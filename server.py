@@ -44,22 +44,18 @@ def des_encrypt_decrypt(block, keys, decrypt=False):
     return permute(right + left, IP_INV)
 
 
-# Function to convert string to a 64-bit binary list
 def str_to_bin64(text: str) -> List[int]:
     bin_text = ''.join(f'{ord(char):08b}' for char in text)
-    return [int(bit) for bit in bin_text.ljust(64, '0')[:64]]  # Pad or trim to 64 bits
+    return [int(bit) for bit in bin_text.ljust(64, '0')[:64]] 
 
-# Function to convert binary list to string (after decryption)
 def bin64_to_str(bin_data: List[int]) -> str:
     chars = [chr(int(''.join(map(str, bin_data[i:i+8])), 2)) for i in range(0, len(bin_data), 8)]
-    return ''.join(chars).rstrip('\x00')  # Remove padding nulls if any
+    return ''.join(chars).rstrip('\x00')  
 
-# Function to convert hexadecimal key to binary list (64-bit)
 def hex_key_to_bin64(hex_key: str) -> List[int]:
     bin_key = bin(int(hex_key, 16))[2:].zfill(64)
-    return [int(bit) for bit in bin_key[:64]]  # Ensure 64-bit length
+    return [int(bit) for bit in bin_key[:64]]  
 
-# DES Key and round keys setup
 HEX_KEY = "133457799BBCDFF1"
 binary_key = hex_key_to_bin64(HEX_KEY)
 round_keys = generate_keys(binary_key)
@@ -74,16 +70,13 @@ def start_server():
         client_socket, addr = server_socket.accept()
         print("Connected by", addr)
 
-        # Receive plaintext from client
         data = client_socket.recv(1024).decode()
         print("Received plaintext from client:", data)
 
-        # Encrypt the plaintext
         binary_plaintext = str_to_bin64(data)
         encrypted_bin = des_encrypt_decrypt(binary_plaintext, round_keys, decrypt=False)
         encrypted_text = ''.join(map(str, encrypted_bin))
 
-        # Send encrypted data back to client
         client_socket.send(encrypted_text.encode())
         print("Sent encrypted text to client:", encrypted_text)
 
